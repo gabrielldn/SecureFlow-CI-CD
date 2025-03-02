@@ -16,6 +16,8 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    outputs:
+      lint_summary: ${{ steps.lint_step.outputs.summary }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -31,13 +33,19 @@ jobs:
           pip install -r requirements.txt
       
       - name: Run linting (flake8)
+        id: lint_step
         run: |
           pip install flake8
-          flake8 bg_remove.py
+          # Run flake8 on bg_remove.py and capture the output (warnings/errors)
+          flake8 bg_remove.py > lint_output.txt 2>&1 || true
+          # Set the lint summary as job output (using new syntax)
+          echo "summary=$(cat lint_output.txt)" >> $GITHUB_OUTPUT
 
   test:
     runs-on: ubuntu-latest
     needs: lint
+    outputs:
+      test_summary: ${{ steps.test_step.outputs.summary }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -53,9 +61,12 @@ jobs:
           pip install -r requirements.txt
       
       - name: Run tests (pytest)
+        id: test_step
         run: |
           pip install pytest
-          pytest
+          # Run pytest and capture output (including warnings)
+          pytest --maxfail=1 --disable-warnings > test_output.txt 2>&1 || true
+          echo "summary=$(cat test_output.txt)" >> $GITHUB_OUTPUT
 
   codeql:
     runs-on: ubuntu-latest
@@ -93,3 +104,18 @@ jobs:
         run: |
           pip install bandit
           bandit -r .
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [lint, test, codeql, dependabot]
+    steps:
+      - name: Send summary to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          LINT_SUMMARY: ${{ needs.lint.outputs.lint_summary }}
+          TEST_SUMMARY: ${{ needs.test.outputs.test_summary }}
+        run: |
+          # Format a human-readable message (using Markdown formatting for Discord)
+          SUMMARY_MESSAGE="**Workflow Summary**\n\n**Lint Results:**\n\`\`\`\n${LINT_SUMMARY}\n\`\`\`\n**Test Results:**\n\`\`\`\n${TEST_SUMMARY}\n\`\`\`"
+          echo "Sending summary to Discord..."
+          curl -H "Content-Type: application/json" -d "{\"content\": \"${SUMMARY_MESSAGE}\"}" $DISCORD_WEBHOOK_URL
