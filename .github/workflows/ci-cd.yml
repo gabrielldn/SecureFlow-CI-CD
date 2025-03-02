@@ -1,5 +1,9 @@
 name: Secure CI/CD Workflow
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -12,65 +16,62 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: Run linting (flake8)
-      run: |
-        pip install flake8
-        flake8 bg_remove.py
-    
-    - name: Run tests (se existirem)
-      run: |
-        pip install pytest
-        pytest
+      - name: Check out code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run linting (flake8)
+        run: |
+          pip install flake8
+          flake8 bg_remove.py
+      
+      - name: Run tests (if any)
+        run: |
+          pip install pytest
+          pytest
 
   codeql:
     runs-on: ubuntu-latest
     name: Perform CodeQL Analysis
-
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-    
-    - name: Set up CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: python
-    
-    - name: Run CodeQL
-      uses: github/codeql-action/analyze@v2
-      with:
-        category: 'security'
+      - name: Check out code
+        uses: actions/checkout@v3
+      
+      - name: Set up CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+      
+      - name: Run CodeQL
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: 'security'
 
   dependabot:
     if: contains(github.event.pull_request.user.login, 'dependabot')
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-    
-    - name: Set up Dependabot
-      uses: dependabot/fetch-metadata@v1
-    
-    - name: Run Dependabot to check dependencies
-      run: |
-        dependabot update --all
-    
-    - name: Check for security vulnerabilities in dependencies
-      run: |
-        pip install bandit
-        bandit -r .
+      - name: Check out code
+        uses: actions/checkout@v3
+      
+      - name: Set up Dependabot
+        uses: dependabot/fetch-metadata@v1
+      
+      - name: Run Dependabot to check dependencies
+        run: |
+          dependabot update --all
+      
+      - name: Check for security vulnerabilities in dependencies
+        run: |
+          pip install bandit
+          bandit -r .
