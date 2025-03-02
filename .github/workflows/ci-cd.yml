@@ -85,22 +85,22 @@ jobs:
         with:
           category: 'security'
 
-  dependabot:
+  bandit-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v3
       
-      - name: Set up Dependabot
-        uses: dependabot/fetch-metadata@v1
-      
-      - name: Run Dependabot to check dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
         run: |
-          dependabot update --all
+          pip install -r requirements.txt
       
-      - name: Check for security vulnerabilities in dependencies
+      - name: Run Bandit
         run: |
           pip install bandit
           bandit -r .
-
-        
