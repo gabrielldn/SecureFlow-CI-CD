@@ -110,24 +110,37 @@ jobs:
     steps:
       - name: Send summary to Discord
         env:
+          # Ajuste o segredo conforme o nome configurado no seu repositório
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+          # Captura os outputs dos jobs de lint e teste
           LINT_SUMMARY: ${{ needs.lint.outputs.lint_summary }}
           TEST_SUMMARY: ${{ needs.test.outputs.test_summary }}
         run: |
-          # Use default message if lint summary is empty
+          # Caso o LINT_SUMMARY esteja vazio, definimos uma mensagem padrão
           if [ -z "$LINT_SUMMARY" ]; then
             LINT_SUMMARY="No linting issues."
           fi
-        
-          SUMMARY_MESSAGE="**Workflow Summary**\n\n**Lint Results:**\n\`\`\`\n${LINT_SUMMARY}\n\`\`\`\n**Test Results:**\n\`\`\`\n${TEST_SUMMARY}\n\`\`\`"
-            
+
+          # Monta a mensagem de forma que cada bloco de código (``` ... ```) 
+          # fique em linhas separadas
+          SUMMARY_MESSAGE="**Workflow Summary**\n\n"\
+          "**Lint Results:**\n"\
+          "\`\`\`\n${LINT_SUMMARY}\n\`\`\`\n\n"\
+          "**Test Results:**\n"\
+          "\`\`\`\n${TEST_SUMMARY}\n\`\`\`"
+
           echo "Sending summary to Discord..."
-          echo "Summary message:"
-          echo -e "$SUMMARY_MESSAGE"
-          
-          # Use jq to generate a valid JSON payload
-          payload=$(jq -n --arg content "$SUMMARY_MESSAGE" '{content: $content}')
+          echo "Summary message (raw):"
+          printf '%s\n' "$SUMMARY_MESSAGE"
+
+          # Gera JSON válido usando jq, preservando newlines exatamente como estão
+          payload="$(printf '%s' "$SUMMARY_MESSAGE" | jq -Rs '{content: .}')"
           echo "Payload: $payload"
-            
-          curl -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK_URL"
+
+          # Envia o payload para o Discord
+          curl -H "Content-Type: application/json" \
+               -d "$payload" \
+               "$DISCORD_WEBHOOK_URL"
+
         
