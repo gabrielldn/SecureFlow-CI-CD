@@ -36,10 +36,10 @@ jobs:
         id: lint_step
         run: |
           pip install flake8
-          # Run flake8 on bg_remove.py and capture the output (warnings/errors)
           flake8 bg_remove.py > lint_output.txt 2>&1 || true
-          # Set the lint summary as job output (using new syntax)
-          echo "summary=$(cat lint_output.txt)" >> $GITHUB_OUTPUT
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          cat lint_output.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
   test:
     runs-on: ubuntu-latest
@@ -64,9 +64,10 @@ jobs:
         id: test_step
         run: |
           pip install pytest
-          # Run pytest and capture output (including warnings)
           pytest --maxfail=1 --disable-warnings > test_output.txt 2>&1 || true
-          echo "summary=$(cat test_output.txt)" >> $GITHUB_OUTPUT
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          cat test_output.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
   codeql:
     runs-on: ubuntu-latest
