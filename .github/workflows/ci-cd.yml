@@ -116,7 +116,10 @@ jobs:
           LINT_SUMMARY: ${{ needs.lint.outputs.lint_summary }}
           TEST_SUMMARY: ${{ needs.test.outputs.test_summary }}
         run: |
-          # Format a human-readable message (using Markdown formatting for Discord)
           SUMMARY_MESSAGE="**Workflow Summary**\n\n**Lint Results:**\n\`\`\`\n${LINT_SUMMARY}\n\`\`\`\n**Test Results:**\n\`\`\`\n${TEST_SUMMARY}\n\`\`\`"
+          # Use jq to generate valid JSON
+          payload=$(jq -n --arg content "$SUMMARY_MESSAGE" '{content: $content}')
           echo "Sending summary to Discord..."
-          curl -H "Content-Type: application/json" -d "{\"content\": \"${SUMMARY_MESSAGE}\"}" $DISCORD_WEBHOOK_URL
+          echo "Payload: $payload"
+          echo "Sumary: $SUMMARY_MESSAGE"
+          curl -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK_URL"
