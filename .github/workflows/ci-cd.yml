@@ -1,10 +1,11 @@
 name: Secure CI/CD Workflow
 
 on:
-  push:
-    branches:
-      - main  # Ajuste conforme o nome da sua branch principal
   pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  push:
     branches:
       - main
 
@@ -20,7 +21,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11  # Ajuste conforme a versão que você usa
+        python-version: 3.11
     
     - name: Install dependencies
       run: |
