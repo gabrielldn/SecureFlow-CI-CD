@@ -108,7 +108,7 @@ jobs:
 
   summary:
     runs-on: ubuntu-latest
-    needs: [lint, test, codeql, dependabot]
+    needs: [lint, test, codeql]
     steps:
       - name: Send summary to Discord
         env:
