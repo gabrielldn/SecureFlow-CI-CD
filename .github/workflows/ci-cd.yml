@@ -10,10 +10,9 @@ on:
       - main
 
 jobs:
-  # Job para instalar dependências, rodar linting e testes
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -37,12 +36,11 @@ jobs:
       run: |
         pip install pytest
         pytest
-    
-  # Job para rodar CodeQL
+
   codeql:
     runs-on: ubuntu-latest
     name: Perform CodeQL Analysis
-    
+
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -56,11 +54,11 @@ jobs:
       uses: github/codeql-action/analyze@v2
       with:
         category: 'security'
-    
-  # Job para escaneamento de dependências com Dependabot
+
   dependabot:
+    if: contains(github.event.pull_request.user.login, 'dependabot')
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Check out code
       uses: actions/checkout@v3
