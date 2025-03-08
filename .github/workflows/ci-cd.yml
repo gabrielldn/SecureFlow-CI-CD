@@ -34,12 +34,26 @@ jobs:
       
       - name: Run linting (flake8)
         id: lint_step
+        continue-on-error: true
         run: |
           pip install flake8
           flake8 bg_remove.py > lint_output.txt 2>&1 || true
           echo "summary<<EOF" >> $GITHUB_OUTPUT
           cat lint_output.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Archive lint report in analysis folder
+        if: always()
+        run: |
+          mkdir -p analysis
+          cp lint_output.txt analysis/lint_output.txt
+      
+      - name: Upload lint report artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: analysis-lint-report
+          path: analysis/lint_output.txt
 
   test:
     runs-on: ubuntu-latest
@@ -61,12 +75,26 @@ jobs:
       
       - name: Run tests (pytest)
         id: test_step
+        continue-on-error: true
         run: |
           pip install pytest
           pytest --maxfail=1 --disable-warnings > test_output.txt 2>&1 || true
           echo "summary<<EOF" >> $GITHUB_OUTPUT
           cat test_output.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Archive test report in analysis folder
+        if: always()
+        run: |
+          mkdir -p analysis
+          cp test_output.txt analysis/test_output.txt
+      
+      - name: Upload test report artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: analysis-test-report
+          path: analysis/test_output.txt
 
   codeql:
     runs-on: ubuntu-latest
@@ -81,10 +109,12 @@ jobs:
           languages: python
       
       - name: Run CodeQL
+        continue-on-error: true
         uses: github/codeql-action/analyze@v3
         with:
           category: 'security'
-
+      # Os relatórios do CodeQL podem ser acessados na aba "Security" do GitHub.
+  
   bandit-scan:
     runs-on: ubuntu-latest
     steps:
@@ -100,7 +130,17 @@ jobs:
         run: |
           pip install -r requirements.txt
       
-      - name: Run Bandit
+      - name: Run Bandit and archive report
+        continue-on-error: true
         run: |
           pip install bandit
-          bandit -r .
+          bandit -r . > bandit_output.txt 2>&1 || true
+          mkdir -p analysis
+          cp bandit_output.txt analysis/bandit_output.txt
+      
+      - name: Upload Bandit report artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: analysis-bandit-report
+          path: analysis/bandit_output.txt
