@@ -54,8 +54,7 @@ my_upload = st.sidebar.file_uploader(
 if my_upload is not None:
     if my_upload.size > MAX_FILE_SIZE:
         st.error(
-            "The uploaded file is too large. Please upload an image smaller "
-            "than 5MB."
+            "The uploaded file is too large. Please upload an image smaller than 5MB." # Lint error
         )
     else:
         fix_image(upload=my_upload)
