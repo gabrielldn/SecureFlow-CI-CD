@@ -37,7 +37,7 @@ jobs:
         continue-on-error: true
         run: |
           pip install flake8
-          flake8 bg_remove.py > lint_output.txt 2>&1 || true
+          flake8 bg_remove.py > lint_output.txt 2>&1
           echo "summary<<EOF" >> $GITHUB_OUTPUT
           cat lint_output.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -78,7 +78,7 @@ jobs:
         continue-on-error: true
         run: |
           pip install pytest
-          pytest --maxfail=1 --disable-warnings > test_output.txt 2>&1 || true
+          pytest --maxfail=1 --disable-warnings > test_output.txt 2>&1
           echo "summary<<EOF" >> $GITHUB_OUTPUT
           cat test_output.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -134,7 +134,7 @@ jobs:
         continue-on-error: true
         run: |
           pip install bandit
-          bandit -r . > bandit_output.txt 2>&1 || true
+          bandit -r . > bandit_output.txt 2>&1
           mkdir -p analysis
           cp bandit_output.txt analysis/bandit_output.txt
       
