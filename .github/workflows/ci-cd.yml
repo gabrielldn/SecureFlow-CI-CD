@@ -31,6 +31,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Create analysis folder
+        if: always()
+        run: mkdir -p analysis
       
       - name: Run linting (flake8)
         id: lint_step
@@ -44,9 +48,7 @@ jobs:
       
       - name: Archive lint report in analysis folder
         if: always()
-        run: |
-          mkdir -p analysis
-          cp lint_output.txt analysis/lint_output.txt
+        run: cp lint_output.txt analysis/lint_output.txt
       
       - name: Upload lint report artifact
         if: always()
@@ -73,6 +75,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
+      - name: Create analysis folder
+        if: always()
+        run: mkdir -p analysis
+      
       - name: Run tests (pytest)
         id: test_step
         continue-on-error: true
@@ -85,9 +91,7 @@ jobs:
       
       - name: Archive test report in analysis folder
         if: always()
-        run: |
-          mkdir -p analysis
-          cp test_output.txt analysis/test_output.txt
+        run: cp test_output.txt analysis/test_output.txt
       
       - name: Upload test report artifact
         if: always()
@@ -113,7 +117,6 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: 'security'
-      # Os relatórios do CodeQL podem ser acessados na aba "Security" do GitHub.
   
   bandit-scan:
     runs-on: ubuntu-latest
@@ -127,15 +130,17 @@ jobs:
           python-version: 3.11
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
+      
+      - name: Create analysis folder
+        if: always()
+        run: mkdir -p analysis
       
       - name: Run Bandit and archive report
         continue-on-error: true
         run: |
           pip install bandit
           bandit -r . > bandit_output.txt 2>&1
-          mkdir -p analysis
           cp bandit_output.txt analysis/bandit_output.txt
       
       - name: Upload Bandit report artifact
